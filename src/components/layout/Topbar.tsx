@@ -7,7 +7,7 @@ interface TopbarProps {
 }
 
 const SearchInput = (props: InputHTMLAttributes<HTMLInputElement>) => (
-  <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5 shadow-sm transition dark:border-slate-700 dark:bg-slate-900">
+  <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-white/95 px-3 py-1.5 shadow-sm ring-1 ring-transparent transition focus-within:ring-clinical-accent/60 dark:border-slate-700 dark:bg-slate-900/95">
     <Search className="h-4 w-4 text-slate-400" />
     <input
       {...props}
@@ -21,7 +21,7 @@ const Topbar = ({ onSearchChange }: TopbarProps) => {
   const { theme, toggleTheme } = useTheme();
 
   return (
-    <header className="flex h-16 items-center justify-between border-b border-slate-200 bg-white/80 px-6 backdrop-blur-sm dark:border-slate-800 dark:bg-slate-900/80">
+    <header className="flex h-16 items-center justify-between border-b border-slate-200 bg-white/80 px-6 backdrop-blur-xl dark:border-slate-800 dark:bg-slate-950/80">
       <div className="w-80 max-w-md">
         <SearchInput onChange={e => onSearchChange?.(e.target.value)} />
       </div>

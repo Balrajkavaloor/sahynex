@@ -14,11 +14,11 @@ import { Card, CardBody, CardHeader } from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
 import Badge from '../../components/ui/Badge';
 import { useSpeechRecognition } from '../../hooks/useSpeechRecognition';
-import { useTranslation } from '../../hooks/useTranslation';
 import { useConsultationStore } from '../../store/consultationStore';
 import { usePatientStore } from '../../store/patientStore';
 import { usePrescriptionStore } from '../../store/prescriptionStore';
 import { toast } from 'sonner';
+import { processConsultationText } from '../../services/consultationService';
 
 interface SummaryFormValues {
   symptoms: string;
@@ -33,16 +33,17 @@ const ConsultationPage = () => {
   const { patients, fetchAll } = usePatientStore();
   const {
     currentSummary,
+    currentTranslation,
     setSummaryField,
     setTranscript,
     setTranslation,
     saveConsultation
   } = useConsultationStore();
+  const [translating, setTranslating] = useState(false);
   const addPrescription = usePrescriptionStore(s => s.addPrescription);
   const { supported, listening, transcript, start, stop } = useSpeechRecognition({
     lang: 'hi-IN'
   });
-  const { loading: translating, result, translate } = useTranslation();
 
   const { register, handleSubmit, reset } = useForm<SummaryFormValues>({
     defaultValues: currentSummary
@@ -56,27 +57,56 @@ const ConsultationPage = () => {
     setTranscript(transcript);
   }, [transcript, setTranscript]);
 
-  useEffect(() => {
-    if (result?.translatedText) {
-      setTranslation(result.translatedText);
-      setSummaryField('symptoms', result.translatedText);
-      reset({ ...currentSummary, symptoms: result.translatedText });
-    }
-  }, [result, setTranslation, setSummaryField, reset, currentSummary]);
-
   const selectedPatient = useMemo(
     () => patients.find(p => p.id === selectedPatientId),
     [patients, selectedPatientId]
   );
 
   const handleTranslate = async () => {
+    if (!selectedPatient) {
+      toast.error('Select a patient first', {
+        description: 'Choose a patient before translating the conversation.'
+      });
+      return;
+    }
     if (!transcript) {
       toast.warning('No speech captured', {
         description: 'Speak into the microphone before translating.'
       });
       return;
     }
-    await translate(transcript, 'en');
+    try {
+      setTranslating(true);
+      const processed = await processConsultationText(selectedPatient.patient_id, transcript);
+
+      // Update translated text and summary from backend response
+      setTranslation(processed.translated_text);
+      setSummaryField('symptoms', processed.summary.symptoms.join(', '));
+      setSummaryField('diagnosis', processed.summary.diagnosis);
+      setSummaryField('prescription', processed.summary.prescriptions.join('\n'));
+      setSummaryField('tests', processed.summary.tests.join('\n'));
+      setSummaryField('instructions', processed.summary.instructions);
+
+      reset({
+        symptoms: processed.summary.symptoms.join(', '),
+        diagnosis: processed.summary.diagnosis,
+        prescription: processed.summary.prescriptions.join('\n'),
+        tests: processed.summary.tests.join('\n'),
+        instructions: processed.summary.instructions
+      });
+
+      toast.success('Conversation translated', {
+        description: 'English translation and AI summary loaded from backend.'
+      });
+    } catch (error: any) {
+      const msg =
+        error?.response?.data?.detail?.error ??
+        error?.response?.data?.detail ??
+        'Unable to translate conversation. Please try again.';
+      toast.error('Translation failed', { description: msg });
+    } finally {
+      setTranslating(false);
+    }
   };
 
   const onSubmit = async (values: SummaryFormValues) => {
@@ -84,27 +114,48 @@ const ConsultationPage = () => {
       toast.error('Select a patient first');
       return;
     }
-    const created = await saveConsultation({
-      patient_id: selectedPatient.patient_id,
-      transcript,
-      summary: values.symptoms,
-      diagnosis: values.diagnosis,
-      prescription: values.prescription,
-      tests: values.tests,
-      instructions: values.instructions
-    });
-    if (values.prescription.trim()) {
-      addPrescription({
+    try {
+      const text = transcript || values.symptoms;
+      const processed = await processConsultationText(selectedPatient.patient_id, text);
+
+      // Update local summary fields from backend AI response
+      setSummaryField('symptoms', processed.summary.symptoms.join(', '));
+      setSummaryField('diagnosis', processed.summary.diagnosis);
+      setSummaryField('prescription', processed.summary.prescriptions.join('\n'));
+      setSummaryField('tests', processed.summary.tests.join('\n'));
+      setSummaryField('instructions', processed.summary.instructions);
+
+      await saveConsultation({
         patient_id: selectedPatient.patient_id,
-        patient_name: selectedPatient.name,
-        medicine: values.prescription,
-        dosage: values.instructions || 'As directed'
+        transcript: processed.transcript,
+        summary: processed.summary.symptoms.join(', '),
+        diagnosis: processed.summary.diagnosis,
+        prescription: processed.summary.prescriptions.join('\n'),
+        tests: processed.summary.tests.join('\n'),
+        instructions: processed.summary.instructions
       });
+
+      const prescriptionText =
+        values.prescription || processed.summary.prescriptions.join('\n');
+
+      if (prescriptionText.trim()) {
+        addPrescription({
+          patient_id: selectedPatient.patient_id,
+          patient_name: selectedPatient.name,
+          medicine: prescriptionText,
+          dosage: values.instructions || processed.summary.instructions || 'As directed'
+        });
+      }
+      toast.success('Consultation saved', {
+        description: `Consultation for ${selectedPatient.name} recorded via backend AI.`
+      });
+    } catch (error: any) {
+      const msg =
+        error?.response?.data?.detail?.error ??
+        error?.response?.data?.detail ??
+        'Unable to process consultation. Please try again.';
+      toast.error('Consultation failed', { description: msg });
     }
-    toast.success('Consultation saved', {
-      description: `Consultation for ${selectedPatient.name} recorded.`
-    });
-    console.log('Saved consultation', created);
   };
 
   return (
@@ -239,7 +290,7 @@ const ConsultationPage = () => {
                     Translated text (English)
                   </p>
                   <textarea
-                    value={result?.translatedText ?? ''}
+                    value={currentTranslation}
                     readOnly
                     className="h-40 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-700 outline-none dark:border-slate-700 dark:bg-slate-900"
                     placeholder="Once translated, English text appears here."

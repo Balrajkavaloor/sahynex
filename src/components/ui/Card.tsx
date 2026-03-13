@@ -8,7 +8,7 @@ interface CardProps extends HTMLAttributes<HTMLDivElement> {
 export const Card = ({ className, children, ...props }: CardProps) => (
   <div
     className={clsx(
-      'rounded-2xl border border-slate-200 bg-clinical-card p-4 shadow-soft-card dark:border-slate-800 dark:bg-slate-900',
+      'group rounded-2xl border border-slate-200 bg-clinical-card/90 p-4 shadow-soft-card backdrop-blur-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl dark:border-slate-800 dark:bg-slate-900/90',
       className
     )}
     {...props}
@@ -33,7 +33,7 @@ export const CardHeader = ({ title, description, actions }: CardHeaderProps) => 
         <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{description}</p>
       )}
     </div>
-    {actions}
+    {actions && <div className="shrink-0">{actions}</div>}
   </div>
 );
 

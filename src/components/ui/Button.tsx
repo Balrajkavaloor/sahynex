@@ -3,12 +3,12 @@ import { cva, VariantProps } from 'class-variance-authority';
 import clsx from 'clsx';
 
 const buttonVariants = cva(
-  'inline-flex items-center justify-center rounded-lg text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-clinical-accent focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 ring-offset-clinical-bg dark:ring-offset-slate-950',
+  'inline-flex items-center justify-center rounded-lg text-sm font-medium transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-clinical-accent focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 ring-offset-clinical-bg dark:ring-offset-slate-950 active:scale-[0.97]',
   {
     variants: {
       variant: {
         primary:
-          'bg-clinical-accent text-white shadow-sm hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-500',
+          'bg-clinical-accent text-white shadow-md shadow-blue-500/20 hover:bg-blue-600 hover:shadow-lg dark:bg-blue-600 dark:hover:bg-blue-500',
         outline:
           'border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800',
         ghost:

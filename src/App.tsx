@@ -10,9 +10,11 @@ import PharmacyDashboard from './pages/pharmacy/PharmacyDashboard';
 import DashboardLayout from './components/layout/DashboardLayout';
 import { ThemeProvider } from './store/themeStore';
 import { Toaster } from './components/ui/Toaster';
+import { useAuthStore } from './store/authStore';
 
 const App = () => {
-  const isAuthenticated = true; // TODO: Replace with real auth state
+  const token = useAuthStore(s => s.token);
+  const isAuthenticated = Boolean(token);
 
   return (
     <ThemeProvider>

@@ -10,10 +10,22 @@ body,
 
 body {
   @apply bg-clinical-bg text-slate-900 antialiased;
+  @apply selection:bg-blue-100 selection:text-blue-900;
 }
 
 .dark body {
   @apply bg-slate-950 text-slate-100;
+}
+
+.page-fade-enter {
+  opacity: 0;
+  transform: translateY(6px);
+}
+
+.page-fade-enter-active {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 180ms ease-out, transform 180ms ease-out;
 }
 
 .scrollbar-thin {

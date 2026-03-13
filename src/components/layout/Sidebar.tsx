@@ -20,7 +20,7 @@ const navItems = [
 
 const Sidebar = () => {
   return (
-    <aside className="flex h-full w-64 flex-col border-r border-slate-200 bg-white/80 p-4 shadow-sm backdrop-blur-sm dark:border-slate-800 dark:bg-slate-900/80">
+    <aside className="flex h-full w-64 flex-col border-r border-slate-200 bg-gradient-to-b from-white/95 via-white/90 to-blue-50/70 p-4 shadow-sm backdrop-blur-xl dark:border-slate-800 dark:from-slate-950/95 dark:via-slate-950/90 dark:to-slate-900/80">
       <div className="mb-6 flex items-center gap-2 px-2">
         <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-clinical-accent-soft text-clinical-accent">
           <Activity className="h-5 w-5" />
@@ -38,7 +38,7 @@ const Sidebar = () => {
             end={to === '/'}
             className={({ isActive }) =>
               [
-                'flex items-center gap-3 rounded-lg px-3 py-2 transition-colors',
+                'flex items-center gap-3 rounded-xl px-3 py-2.5 transition-all duration-150',
                 isActive
                   ? 'bg-clinical-accent text-white shadow-soft-card'
                   : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white'

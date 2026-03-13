@@ -3,6 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { Lock, Mail } from 'lucide-react';
 import Button from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
+import { login } from '../../services/authService';
+import { useAuthStore } from '../../store/authStore';
+import { toast } from 'sonner';
 
 interface LoginFormValues {
   email: string;
@@ -14,10 +17,23 @@ const Login = () => {
     defaultValues: { email: '', password: '' }
   });
   const navigate = useNavigate();
+  const setToken = useAuthStore(s => s.setToken);
 
-  const onSubmit = () => {
-    // Stub auth; in real app call backend then store token
-    navigate('/', { replace: true });
+  const onSubmit = async (values: LoginFormValues) => {
+    try {
+      const result = await login(values.email, values.password);
+      setToken(result.access_token);
+      toast.success('Logged in', {
+        description: 'You are now authenticated with the clinical backend.'
+      });
+      navigate('/', { replace: true });
+    } catch (error: any) {
+      const msg =
+        error?.response?.data?.detail?.error ??
+        error?.response?.data?.detail ??
+        'Unable to login. Please check your credentials.';
+      toast.error('Login failed', { description: msg });
+    }
   };
 
   return (
